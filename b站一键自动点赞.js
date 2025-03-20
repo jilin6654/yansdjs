@@ -102,11 +102,11 @@
                 const nextVideo = document.querySelector('.video-pod__list div[data-scrolled="true"]')?.nextElementSibling;
 
                 //获取下一个视频
-                const nextVideopic = document.querySelector('.rec-list .card-box picture');
+                const nextVideopic = findMatchingPictureInRecList();
                 if (nextVideo && nextVideo.querySelector('.single-p .title-txt')) {
                     nextVideo.querySelector('.single-p .title-txt').click();
                 } else if(nextVideopic){
-                nextVideopic.click();
+                    nextVideopic.click();
                 }
                 else {
                     console.error('无法找到下一个视频，自动点赞停止');
@@ -149,6 +149,34 @@
     }
 }
 
+function findMatchingPictureInRecList() {
+    // 定义要匹配的关键词
+    const keywords = ["deepseek", "claude", "cursor", "cline", "gpt"];
+    
+    // 获取所有 .rec-list .card-box 下的 picture 标签
+    const pictureElements = document.querySelectorAll('.rec-list .card-box picture');
+    
+    // 遍历每个 picture 标签
+    for (const picture of pictureElements) {
+        // 获取当前 picture 标签中的 img 标签
+        const img = picture.querySelector('img');
+        
+        // 检查 img 是否存在且包含 alt 属性
+        if (img && img.hasAttribute('alt')) {
+            // 获取 alt 属性值并转换为小写
+            const altValue = img.getAttribute('alt').toLowerCase();
+            
+            // 判断 alt 是否包含任意关键词
+            if (keywords.some(keyword => altValue.includes(keyword.toLowerCase()))) {
+                // 如果匹配成功，返回该 picture 标签
+                return picture;
+            }
+        }
+    }
+    
+    // 如果没有匹配到，返回 null
+    return null;
+}    
    async function clickFFButtons(threads) {
        const ffButtons = []
         for (let thread of threads) {
