@@ -270,12 +270,14 @@ function findMatchingPictureInRecList() {
                 if (biliIcon?.getAttribute('style') === '') {
                     biliIcon.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     biliIcon.click();
-                    await new Promise(resolve => setTimeout(resolve, 600));
+                    //随机等待600至2000毫秒
+                   await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (2000 - 600 + 1)) + 600));
+
                     if(!hasUserName(thread)){
                         //点击回复按钮
                         replyBtn.click();
-                         await new Promise(resolve => setTimeout(resolve, 500));
-                        //等待0.5秒后进行回复
+                         //随机等待600至2000毫秒
+                       await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (2000 - 600 + 1)) + 600));
                         postCall(thread)
                     }
                 }
