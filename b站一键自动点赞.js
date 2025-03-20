@@ -58,8 +58,10 @@
                 document.querySelector('.bpx-player-ctrl-play').click()
 
                 //切换评论到最新评论列表
+                try{
                 document.querySelector('bili-comments').shadowRoot.querySelector('bili-comments-header-renderer').shadowRoot.querySelectorAll('bili-text-button')[1].click();
                 await new Promise(resolve => setTimeout(resolve, 2000));
+                }catch{}
                try{
                const dz = document.querySelectorAll('div[title="点赞（Q）"]')[0]
                 if(!dz.classList.contains("on")){
@@ -179,12 +181,16 @@ function findMatchingPictureInRecList() {
 }
 
     //判断评论是否包含烟神殿
-    function hasUserName(thread) {
-    // 获取所有评论标签
-    const replyElements = thread.shadowRoot
-        ?.querySelector('bili-comment-replies-renderer')
-        ?.shadowRoot.querySelectorAll('bili-comment-reply-renderer');
-
+   async function hasUserName(thread) {
+        //先点击查看所有回复
+       thread.shadowRoot
+        ?.querySelector('bili-comment-replies-renderer')?.shadowRoot.querySelector('#expander-footer bili-text-button')?.shadowRoot?.querySelector('button')?.click();
+        //等待1秒加载完成回复列表
+       await new Promise(resolve => setTimeout(resolve, 1000));
+       // 获取所有评论标签
+       const replyElements = thread.shadowRoot
+       ?.querySelector('bili-comment-replies-renderer')
+       ?.shadowRoot.querySelectorAll('bili-comment-reply-renderer');
     // 如果没有找到评论标签，直接返回 false
     if (!replyElements) {
         return false;
@@ -272,12 +278,12 @@ function findMatchingPictureInRecList() {
                     biliIcon.click();
                     //随机等待600至2000毫秒
                    await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (2000 - 600 + 1)) + 600));
-
-                    if(!hasUserName(thread)){
+                    const flag = await hasUserName(thread);
+                    if(!flag){
                         //点击回复按钮
                         replyBtn.click();
                          //随机等待600至2000毫秒
-                       await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (2000 - 600 + 1)) + 600));
+                       await new Promise(resolve => setTimeout(resolve, 5000));
                         postCall(thread)
                     }
                 }
