@@ -321,11 +321,6 @@
         // 滚动到页面底部
         scrollToBottom();
         console.log(`等待${config.scrollDelay/1000}秒让页面加载...`);
-        await delay(config.scrollDelay); // 等待20秒
-
-        // 点赞
-        await likeVideo();
-
         // 评论
         await sendComment(randomComment);
     }
@@ -434,6 +429,9 @@
                 .shadowRoot.querySelector('#input .brt-root .brt-editor');
 
             if (inputElement) {
+
+                inputElement.click()
+
                 // 设置评论内容
                 inputElement.innerText = comment;
 
@@ -449,7 +447,7 @@
                     .shadowRoot.querySelector('#pub button');
 
                 if (publishButton) {
-                    publishButton.click();
+                    //publishButton.click();
                     console.log('评论发表成功');
                     await delay(config.commentDelay);
                 } else {
