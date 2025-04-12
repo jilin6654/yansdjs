@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站AI视频一键评论自动切换
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description  一键评论后自动点赞、等待并切换到下一个AI相关视频
 // @author       YourName
 // @match        https://www.bilibili.com/video/*
