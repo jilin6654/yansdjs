@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站AI视频一键评论自动切换
 // @namespace    http://tampermonkey.net/
-// @version      2.4
+// @version      2.5
 // @description  一键评论后自动点赞、等待并切换到下一个AI相关视频
 // @author       YourName
 // @match        https://www.bilibili.com/video/*
@@ -21,7 +21,9 @@
         likeDelay: 1000,        // 点赞后的等待时间(毫秒)
         commentDelay: 2000,     // 评论后的等待时间(毫秒)
         randomScrollInterval: 60000, // 随机滚动间隔时间(毫秒) - 1分钟
-        randomScrollAmount: 200  // 随机滚动幅度(像素)
+        randomScrollAmount: 200,  // 随机滚动幅度(像素)
+        safariMaxAttempts: 15,   // Safari最大尝试次数
+        safariAttemptDelay: 1000 // Safari每次尝试间隔(毫秒)
     };
 
     // 评论内容数组
@@ -41,6 +43,11 @@
         "👈强烈推荐！gemini、grok-3、claude、deepseek、mj绘图全都有，用着特别顺手～"
     ];
 
+    // 浏览器环境检测
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isIPad = /iPad|Macintosh/i.test(navigator.userAgent) && 'ontouchend' in document;
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
     let countdownInterval = null;
     let countdownElement = null;
     let remainingTime = 0;
@@ -55,7 +62,7 @@
     // 随机滚动函数
     function randomScroll() {
         const currentScroll = window.scrollY;
-        const scrollDirection = Math.random() > 0.5 ? 1 : -1; // 随机决定向上或向下滚动
+        const scrollDirection = Math.random() > 0.5 ? 1 : -1;
         const scrollAmount = Math.floor(Math.random() * config.randomScrollAmount) * scrollDirection;
         const newScroll = Math.max(0, currentScroll + scrollAmount);
 
@@ -69,7 +76,7 @@
     // 开始随机滚动
     function startRandomScroll() {
         stopRandomScroll();
-        randomScroll(); // 立即执行一次
+        randomScroll();
         randomScrollInterval = setInterval(randomScroll, config.randomScrollInterval);
     }
 
@@ -94,7 +101,7 @@
         container.style.alignItems = 'flex-end';
         container.style.gap = '10px';
 
-        // 创建一键评论按钮
+        // 一键评论按钮
         const commentButton = document.createElement('button');
         commentButton.textContent = '一键评论';
         commentButton.style.padding = '10px 15px';
@@ -118,8 +125,8 @@
             commentButton.style.transform = 'scale(1)';
         });
 
-        // 点击事件 - 一键评论
-        commentButton.addEventListener('click', async () => {
+        // 点击事件
+        const handleAutoComment = async () => {
             if (!isProcessing) {
                 isProcessing = true;
                 commentButton.textContent = '执行中...';
@@ -127,9 +134,13 @@
                 commentButton.textContent = '一键评论';
                 isProcessing = false;
             }
-        });
+        };
+        commentButton.addEventListener('click', handleAutoComment);
+        if (isIPad) {
+            commentButton.addEventListener('touchend', handleAutoComment);
+        }
 
-        // 创建手动评论按钮
+        // 手动评论按钮
         const manualCommentButton = document.createElement('button');
         manualCommentButton.textContent = '手动评论';
         manualCommentButton.style.padding = '10px 15px';
@@ -153,18 +164,30 @@
             manualCommentButton.style.transform = 'scale(1)';
         });
 
-        // 点击事件 - 手动评论
-        manualCommentButton.addEventListener('click', async () => {
+        // 点击事件
+        const handleManualComment = async () => {
             if (!isProcessing) {
                 isProcessing = true;
                 manualCommentButton.textContent = '评论中...';
+                
+                // iPad上的触觉反馈
+                if (isIPad) {
+                    manualCommentButton.style.transform = 'scale(0.95)';
+                    await delay(100);
+                    manualCommentButton.style.transform = 'scale(1)';
+                }
+                
                 await performComment();
                 manualCommentButton.textContent = '手动评论';
                 isProcessing = false;
             }
-        });
+        };
+        manualCommentButton.addEventListener('click', handleManualComment);
+        if (isIPad) {
+            manualCommentButton.addEventListener('touchend', handleManualComment);
+        }
 
-        // 创建倒计时显示
+        // 倒计时显示
         countdownElement = document.createElement('div');
         countdownElement.style.padding = '8px 12px';
         countdownElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
@@ -175,7 +198,7 @@
         countdownElement.style.display = 'none';
         countdownElement.innerHTML = '倒计时: 00:00:00';
 
-        // 创建在线人数显示
+        // 在线人数显示
         const onlineInfo = document.createElement('div');
         onlineInfo.style.padding = '8px 12px';
         onlineInfo.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
@@ -184,7 +207,7 @@
         onlineInfo.style.fontSize = '12px';
         onlineInfo.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
 
-        // 更新在线人数函数
+        // 更新在线人数
         function updateOnlineInfo() {
             const onlineElement = document.querySelector('.bpx-player-video-info-online');
             if (onlineElement) {
@@ -200,7 +223,6 @@
 
         // 初始更新
         updateOnlineInfo();
-        // 每1秒更新一次
         setInterval(updateOnlineInfo, 1000);
 
         // 添加到容器
@@ -281,7 +303,7 @@
             if (nextVideopic) {
                 nextVideopic.click();
                 console.log('切换到匹配的推荐视频');
-                await delay(5000); // 等待5秒让页面加载
+                await delay(5000);
                 return true;
             }
 
@@ -290,7 +312,7 @@
             if (nextVideo) {
                 nextVideo.click();
                 console.log('切换到常规的下一个视频');
-                await delay(5000); // 等待5秒让页面加载
+                await delay(5000);
                 return true;
             }
 
@@ -313,84 +335,147 @@
         }
     }
 
-    // 执行评论操作
-    async function performComment() {
-        // 随机选择评论
-        const randomComment = comments[Math.floor(Math.random() * comments.length)];
+    // Safari/iPad专用评论函数
+    async function sendCommentSafari(comment) {
+        let attempts = 0;
+        let success = false;
         
-        // 滚动到页面底部
-        scrollToBottom();
-        console.log(`等待${config.scrollDelay/1000}秒让页面加载...`);
-        await delay(config.scrollDelay); // 等待20秒
-
-        // 点赞
-        await likeVideo();
-
-        // 评论
-        await sendComment(randomComment);
+        while (attempts < config.safariMaxAttempts && !success) {
+            attempts++;
+            console.log(`Safari尝试评论 (${attempts}/${config.safariMaxAttempts})`);
+            
+            scrollToBottom();
+            await delay(1000);
+            
+            const commentSection = document.querySelector('bili-comments');
+            if (!commentSection) {
+                await delay(config.safariAttemptDelay);
+                continue;
+            }
+            
+            // 更稳健的Shadow DOM访问方式
+            const getShadowElement = (root, selectors) => {
+                try {
+                    let element = root;
+                    for (const selector of selectors) {
+                        if (!element) return null;
+                        if (element.shadowRoot) {
+                            element = element.shadowRoot.querySelector(selector);
+                        } else {
+                            element = element.querySelector(selector);
+                        }
+                    }
+                    return element;
+                } catch (e) {
+                    return null;
+                }
+            };
+            
+            const inputElement = getShadowElement(commentSection, [
+                'bili-comments-header-renderer',
+                'bili-comment-box',
+                'bili-comment-rich-textarea',
+                '#input .brt-root .brt-editor'
+            ]);
+            
+            if (inputElement) {
+                inputElement.focus();
+                await delay(300);
+                
+                // 使用execCommand设置内容
+                inputElement.innerHTML = '';
+                await delay(300);
+                
+                document.execCommand('insertText', false, comment);
+                await delay(500);
+                
+                // 触发完整的事件序列
+                const events = ['focus', 'keydown', 'input', 'keyup', 'change'];
+                events.forEach(eventType => {
+                    const event = new Event(eventType, { bubbles: true });
+                    inputElement.dispatchEvent(event);
+                });
+                
+                await delay(500);
+                
+                // 查找发布按钮
+                const publishButton = getShadowElement(commentSection, [
+                    'bili-comments-header-renderer',
+                    'bili-comment-box',
+                    '#pub button'
+                ]);
+                
+                if (publishButton) {
+                    // 兼容的点击方式
+                    const clickEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    publishButton.dispatchEvent(clickEvent);
+                    
+                    console.log('Safari评论发表成功');
+                    success = true;
+                    await delay(config.commentDelay);
+                }
+            }
+            
+            if (!success) {
+                await delay(config.safariAttemptDelay);
+            }
+        }
+        
+        if (!success) {
+            console.log('Safari评论失败，达到最大尝试次数');
+        }
     }
 
-    // 处理视频的完整流程
-    async function processVideo() {
-        const onlineNumber = getOnlineNumber();
-
-        if (onlineNumber > config.minViewers) {
-            // 检查是否已经点赞
-            const alreadyLiked = isVideoLiked();
-
-            if (alreadyLiked) {
-                console.log('视频已经点赞过，直接切换到下一个视频');
-                await switchToNextVideo();
-                await processVideo(); // 继续处理下一个视频
+    // 标准评论函数
+    async function sendCommentStandard(comment) {
+        try {
+            const isLoaded = await waitForCommentSection();
+            if (!isLoaded) {
+                console.log('评论区加载超时，无法发表评论');
                 return;
             }
 
-            await performComment();
+            const commentSection = document.querySelector('bili-comments');
+            const inputElement = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
+                .shadowRoot.querySelector('bili-comment-box')
+                .shadowRoot.querySelector('bili-comment-rich-textarea')
+                .shadowRoot.querySelector('#input .brt-root .brt-editor');
 
-            console.log(`评论和点赞完成，等待${config.commentInterval}分钟后切换到下一个视频`);
+            if (inputElement) {
+                inputElement.innerText = comment;
+                const inputEvent = new Event('input', { bubbles: true });
+                inputElement.dispatchEvent(inputEvent);
+                await delay(500);
 
-            // 设置间隔时间后切换到下一个视频
-            startCountdown(config.commentInterval);
-            startRandomScroll(); // 开始随机滚动
+                const publishButton = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
+                    .shadowRoot.querySelector('bili-comment-box')
+                    .shadowRoot.querySelector('#pub button');
 
-            await delay(config.commentInterval * 60 * 1000); // 等待指定分钟
-
-            stopRandomScroll(); // 停止随机滚动
-            await switchToNextVideo();
-            await processVideo(); // 继续处理下一个视频
-        } else {
-            console.log(`在线人数${onlineNumber}不足${config.minViewers}人，${config.lowViewersDelay}秒后切换到下一个视频`);
-
-            await delay(config.lowViewersDelay * 1000); // 等待指定秒数
-            await switchToNextVideo();
-            await processVideo(); // 继续处理下一个视频
-        }
-    }
-
-    // 获取在线人数
-    function getOnlineNumber() {
-        const onlineElement = document.querySelector('.bpx-player-video-info-online');
-        if (onlineElement) {
-            const onlineText = onlineElement.innerHTML;
-            return parseInt(onlineText.replace(/[^0-9]/g, ''));
-        }
-        return 0;
-    }
-
-    // 点赞视频
-    async function likeVideo() {
-        try {
-            const dz = document.querySelectorAll('div[title="点赞（Q）"]')[0];
-            if (dz && !dz.classList.contains("on")) {
-                dz.click();
-                console.log('点赞成功');
-                await delay(config.likeDelay);
-            } else if (dz && dz.classList.contains("on")) {
-                console.log('视频已经点赞过');
+                if (publishButton) {
+                    publishButton.click();
+                    console.log('评论发表成功');
+                    await delay(config.commentDelay);
+                } else {
+                    console.log('无法找到发布按钮');
+                }
+            } else {
+                console.log('无法找到评论输入框');
             }
         } catch (e) {
-            console.error('点赞时出错:', e);
+            console.error('评论时出错:', e);
         }
+    }
+
+    // 通用评论函数
+    async function sendComment(comment) {
+        if (isSafari || isIPad) {
+            return await sendCommentSafari(comment);
+        }
+        return await sendCommentStandard(comment);
     }
 
     // 检查评论区是否加载完成
@@ -416,53 +501,77 @@
         return false;
     }
 
-    // 发送评论函数
-    async function sendComment(comment) {
+    // 点赞视频
+    async function likeVideo() {
         try {
-            // 先等待评论区加载完成
-            const isLoaded = await waitForCommentSection();
-            if (!isLoaded) {
-                console.log('评论区加载超时，无法发表评论');
-                return;
-            }
-
-            // 获取评论输入框
-            const commentSection = document.querySelector('bili-comments');
-            const inputElement = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
-                .shadowRoot.querySelector('bili-comment-box')
-                .shadowRoot.querySelector('bili-comment-rich-textarea')
-                .shadowRoot.querySelector('#input .brt-root .brt-editor');
-
-            if (inputElement) {
-                // 设置评论内容
-                inputElement.innerText = comment;
-
-                // 触发输入事件
-                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-                inputElement.dispatchEvent(inputEvent);
-
-                await delay(500);
-
-                // 获取发布按钮并点击
-                const publishButton = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
-                    .shadowRoot.querySelector('bili-comment-box')
-                    .shadowRoot.querySelector('#pub button');
-
-                if (publishButton) {
-                    publishButton.click();
-                    console.log('评论发表成功');
-                    await delay(config.commentDelay);
-                } else {
-                    alert('无法找到发布按钮')
-                }
-            } else {
-                alert('无法找到评论输入框');
+            const dz = document.querySelectorAll('div[title="点赞（Q）"]')[0];
+            if (dz && !dz.classList.contains("on")) {
+                dz.click();
+                console.log('点赞成功');
+                await delay(config.likeDelay);
+            } else if (dz && dz.classList.contains("on")) {
+                console.log('视频已经点赞过');
             }
         } catch (e) {
-            alert('评论时出错:', e);
+            console.error('点赞时出错:', e);
         }
     }
 
-    // 页面加载完成后添加按钮和在线人数显示
+    // 执行评论操作
+    async function performComment() {
+        const randomComment = comments[Math.floor(Math.random() * comments.length)];
+        scrollToBottom();
+        
+        const waitTime = isSafari || isIPad ? config.scrollDelay * 1.5 : config.scrollDelay;
+        console.log(`等待${waitTime/1000}秒让页面加载...`);
+        await delay(waitTime);
+
+        await likeVideo();
+        await sendComment(randomComment);
+    }
+
+    // 处理视频的完整流程
+    async function processVideo() {
+        const onlineNumber = getOnlineNumber();
+
+        if (onlineNumber > config.minViewers) {
+            const alreadyLiked = isVideoLiked();
+
+            if (alreadyLiked) {
+                console.log('视频已经点赞过，直接切换到下一个视频');
+                await switchToNextVideo();
+                await processVideo();
+                return;
+            }
+
+            await performComment();
+
+            console.log(`评论和点赞完成，等待${config.commentInterval}分钟后切换到下一个视频`);
+            startCountdown(config.commentInterval);
+            startRandomScroll();
+
+            await delay(config.commentInterval * 60 * 1000);
+            stopRandomScroll();
+            await switchToNextVideo();
+            await processVideo();
+        } else {
+            console.log(`在线人数${onlineNumber}不足${config.minViewers}人，${config.lowViewersDelay}秒后切换到下一个视频`);
+            await delay(config.lowViewersDelay * 1000);
+            await switchToNextVideo();
+            await processVideo();
+        }
+    }
+
+    // 获取在线人数
+    function getOnlineNumber() {
+        const onlineElement = document.querySelector('.bpx-player-video-info-online');
+        if (onlineElement) {
+            const onlineText = onlineElement.innerHTML;
+            return parseInt(onlineText.replace(/[^0-9]/g, ''));
+        }
+        return 0;
+    }
+
+    // 页面加载完成后初始化
     window.addEventListener('load', createCommentButton);
 })();
