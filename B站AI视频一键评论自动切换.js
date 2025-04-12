@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站AI视频一键评论自动切换
 // @namespace    http://tampermonkey.net/
-// @version      2.3
+// @version      2.4
 // @description  一键评论后自动点赞、等待并切换到下一个AI相关视频
 // @author       YourName
 // @match        https://www.bilibili.com/video/*
@@ -129,6 +129,41 @@
             }
         });
 
+        // 创建手动评论按钮
+        const manualCommentButton = document.createElement('button');
+        manualCommentButton.textContent = '手动评论';
+        manualCommentButton.style.padding = '10px 15px';
+        manualCommentButton.style.backgroundColor = '#23ade5';
+        manualCommentButton.style.color = 'white';
+        manualCommentButton.style.border = 'none';
+        manualCommentButton.style.borderRadius = '20px';
+        manualCommentButton.style.cursor = 'pointer';
+        manualCommentButton.style.fontSize = '14px';
+        manualCommentButton.style.fontWeight = 'bold';
+        manualCommentButton.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+        manualCommentButton.style.transition = 'all 0.3s';
+
+        // 鼠标悬停效果
+        manualCommentButton.addEventListener('mouseover', () => {
+            manualCommentButton.style.backgroundColor = '#4fc1e9';
+            manualCommentButton.style.transform = 'scale(1.05)';
+        });
+        manualCommentButton.addEventListener('mouseout', () => {
+            manualCommentButton.style.backgroundColor = '#23ade5';
+            manualCommentButton.style.transform = 'scale(1)';
+        });
+
+        // 点击事件 - 手动评论
+        manualCommentButton.addEventListener('click', async () => {
+            if (!isProcessing) {
+                isProcessing = true;
+                manualCommentButton.textContent = '评论中...';
+                await performComment();
+                manualCommentButton.textContent = '手动评论';
+                isProcessing = false;
+            }
+        });
+
         // 创建倒计时显示
         countdownElement = document.createElement('div');
         countdownElement.style.padding = '8px 12px';
@@ -170,6 +205,7 @@
 
         // 添加到容器
         container.appendChild(commentButton);
+        container.appendChild(manualCommentButton);
         container.appendChild(onlineInfo);
         container.appendChild(countdownElement);
         document.body.appendChild(container);
@@ -277,6 +313,23 @@
         }
     }
 
+    // 执行评论操作
+    async function performComment() {
+        // 随机选择评论
+        const randomComment = comments[Math.floor(Math.random() * comments.length)];
+        
+        // 滚动到页面底部
+        scrollToBottom();
+        console.log(`等待${config.scrollDelay/1000}秒让页面加载...`);
+        await delay(config.scrollDelay); // 等待20秒
+
+        // 点赞
+        await likeVideo();
+
+        // 评论
+        await sendComment(randomComment);
+    }
+
     // 处理视频的完整流程
     async function processVideo() {
         const onlineNumber = getOnlineNumber();
@@ -292,19 +345,7 @@
                 return;
             }
 
-            // 滚动到页面底部
-            scrollToBottom();
-            console.log(`等待${config.scrollDelay/1000}秒让页面加载...`);
-            await delay(config.scrollDelay); // 等待20秒
-
-            // 随机选择评论
-            const randomComment = comments[Math.floor(Math.random() * comments.length)];
-
-            // 点赞
-            await likeVideo();
-
-            // 评论
-            await sendComment(randomComment);
+            await performComment();
 
             console.log(`评论和点赞完成，等待${config.commentInterval}分钟后切换到下一个视频`);
 
