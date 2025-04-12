@@ -394,7 +394,7 @@
 
             if (inputElement) {
                 // 设置评论内容
-                inputElement.innerHTML = comment;
+                inputElement.innerText = comment;
 
                 // 触发输入事件
                 const inputEvent = new Event('input', { bubbles: true, cancelable: true });
@@ -412,13 +412,13 @@
                     console.log('评论发表成功');
                     await delay(config.commentDelay);
                 } else {
-                    console.log('无法找到发布按钮');
+                    alert('无法找到发布按钮')
                 }
             } else {
-                console.log('无法找到评论输入框');
+                alert('无法找到评论输入框');
             }
         } catch (e) {
-            console.error('评论时出错:', e);
+            alert('评论时出错:', e);
         }
     }
 
