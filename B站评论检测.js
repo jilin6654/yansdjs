@@ -113,11 +113,18 @@
         }
         addLog('✅ 找到 bili-comment-box', 'success');
 
-        // 4. 检查第三层 Shadow DOM (bili-comment-rich-textarea)
-        const richTextarea = commentBox.shadowRoot?.querySelector('#comment-area #body #editor bili-comment-rich-textarea');
-        if (!richTextarea) {
-            addLog('❌ 未找到 bili-comment-rich-textarea', 'error');
-            return;
+       // 4. 检查第三层 Shadow DOM (bili-comment-rich-textarea)
+        let richTextarea;
+        try {
+            richTextarea = commentBox.shadowRoot?.querySelector('bili-comment-rich-textarea');
+            if (!richTextarea) {
+                addLog('❌ 未找到 bili-comment-rich-textarea', 'error');
+                return;
+            }
+            addLog('✅ 找到 bili-comment-rich-textarea', 'success');
+        } catch (e) {
+            addLog(`❌ 获取 bili-comment-rich-textarea 时出错: ${e.message}`, 'error');
+            return; // 终止检测
         }
         addLog('✅ 找到 bili-comment-rich-textarea', 'success');
 
