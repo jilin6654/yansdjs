@@ -414,51 +414,56 @@
     // 发送评论函数
     async function sendComment(comment) {
         try {
-            // 先等待评论区加载完成
-            const isLoaded = await waitForCommentSection();
-            if (!isLoaded) {
-                console.log('评论区加载超时，无法发表评论');
-                return;
-            }
+    // 等待评论区加载
+    const isLoaded = await waitForCommentSection();
+    if (!isLoaded) {
+        alert('评论区加载超时');
+        return;
+    }
 
-            // 获取评论输入框
-            const commentSection = document.querySelector('bili-comments');
-            const inputElement = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
-                .shadowRoot.querySelector('bili-comment-box')
-                .shadowRoot.querySelector('bili-comment-rich-textarea')
-                .shadowRoot.querySelector('#input .brt-root .brt-editor');
+    // 获取评论输入框
+    const commentSection = document.querySelector('bili-comments');
+    if (!commentSection || !commentSection.shadowRoot) {
+        alert('评论区 Shadow DOM 未加载');
+        return;
+    }
 
-            if (inputElement) {
+    const inputElement = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
+        ?.shadowRoot?.querySelector('bili-comment-box')
+        ?.shadowRoot?.querySelector('bili-comment-rich-textarea')
+        ?.shadowRoot?.querySelector('#input .brt-root .brt-editor');
 
-                inputElement.click()
+    if (!inputElement) {
+        alert('未找到评论输入框');
+        return;
+    }
 
-                // 设置评论内容
-                inputElement.innerText = comment;
+    // 聚焦并输入内容
+    inputElement.click();
+    inputElement.innerText = comment;
 
-                // 触发输入事件
-                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-                inputElement.dispatchEvent(inputEvent);
+    // 触发必要事件
+    const inputEvent = new Event('input', { bubbles: true });
+    inputElement.dispatchEvent(inputEvent);
 
-                await delay(500);
+    await delay(500);
 
-                // 获取发布按钮并点击
-                const publishButton = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
-                    .shadowRoot.querySelector('bili-comment-box')
-                    .shadowRoot.querySelector('#pub button');
+    // 获取发布按钮
+    const publishButton = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
+        ?.shadowRoot?.querySelector('bili-comment-box')
+        ?.shadowRoot?.querySelector('#pub button');
 
-                if (publishButton) {
-                    //publishButton.click();
-                    console.log('评论发表成功');
-                    await delay(config.commentDelay);
-                } else {
-                    alert('无法找到发布按钮')
-                }
-            } else {
-                alert('无法找到评论输入框');
-            }
-        } catch (e) {
-            alert('评论时出错:', e);
-        }
+    if (publishButton && !publishButton.disabled) {
+        publishButton.click();
+        console.log('评论发表成功');
+        await delay(config.commentDelay);
+    } else {
+        alert('发布按钮不可用或未找到');
+    }
+} catch (e) {
+    alert(`评论时出错: ${e.message}`);  // ✅ 修复 alert 语法
+    console.error('详细错误:', e);      // 输出完整错误到控制台
+}
     }
 
     // 页面加载完成后添加按钮和在线人数显示
