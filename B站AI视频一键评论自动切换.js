@@ -21,7 +21,8 @@
         likeDelay: 1000,        // 点赞后的等待时间(毫秒)
         commentDelay: 2000,     // 评论后的等待时间(毫秒)
         randomScrollInterval: 60000, // 随机滚动间隔时间(毫秒) - 1分钟
-        randomScrollAmount: 200  // 随机滚动幅度(像素)
+        randomScrollAmount: 200,  // 随机滚动幅度(像素)
+        myUsername: '烟神殿API中转' // 我的用户名
     };
 
     // 评论内容数组
@@ -129,41 +130,6 @@
             }
         });
 
-        // 创建手动评论按钮
-        const manualCommentButton = document.createElement('button');
-        manualCommentButton.textContent = '手动评论';
-        manualCommentButton.style.padding = '10px 15px';
-        manualCommentButton.style.backgroundColor = '#23ade5';
-        manualCommentButton.style.color = 'white';
-        manualCommentButton.style.border = 'none';
-        manualCommentButton.style.borderRadius = '20px';
-        manualCommentButton.style.cursor = 'pointer';
-        manualCommentButton.style.fontSize = '14px';
-        manualCommentButton.style.fontWeight = 'bold';
-        manualCommentButton.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-        manualCommentButton.style.transition = 'all 0.3s';
-
-        // 鼠标悬停效果
-        manualCommentButton.addEventListener('mouseover', () => {
-            manualCommentButton.style.backgroundColor = '#4fc1e9';
-            manualCommentButton.style.transform = 'scale(1.05)';
-        });
-        manualCommentButton.addEventListener('mouseout', () => {
-            manualCommentButton.style.backgroundColor = '#23ade5';
-            manualCommentButton.style.transform = 'scale(1)';
-        });
-
-        // 点击事件 - 手动评论
-        manualCommentButton.addEventListener('click', async () => {
-            if (!isProcessing) {
-                isProcessing = true;
-                manualCommentButton.textContent = '评论中...';
-                await performComment();
-                manualCommentButton.textContent = '手动评论';
-                isProcessing = false;
-            }
-        });
-
         // 创建倒计时显示
         countdownElement = document.createElement('div');
         countdownElement.style.padding = '8px 12px';
@@ -205,7 +171,6 @@
 
         // 添加到容器
         container.appendChild(commentButton);
-        container.appendChild(manualCommentButton);
         container.appendChild(onlineInfo);
         container.appendChild(countdownElement);
         document.body.appendChild(container);
@@ -313,16 +278,51 @@
         }
     }
 
-    // 执行评论操作
-    async function performComment() {
-        // 随机选择评论
-        const randomComment = comments[Math.floor(Math.random() * comments.length)];
-        
-        // 滚动到页面底部
-        scrollToBottom();
-        console.log(`等待${config.scrollDelay/1000}秒让页面加载...`);
-        // 评论
-        await sendComment(randomComment);
+    // 切换到最新评论
+    async function switchToNewestComments() {
+        try {
+            const newestCommentButton = document.querySelector('bili-comments')?.shadowRoot
+                ?.querySelector('bili-comments-header-renderer')?.shadowRoot
+                ?.querySelectorAll('#sort-actions bili-text-button')[1]?.shadowRoot
+                ?.querySelector('button');
+            
+            if (newestCommentButton) {
+                newestCommentButton.click();
+                console.log('已切换到最新评论');
+                await delay(1000); // 等待1秒让评论加载
+                return true;
+            }
+            return false;
+        } catch (e) {
+            console.error('切换最新评论时出错:', e);
+            return false;
+        }
+    }
+
+    // 检查是否已经评论过
+    function hasCommented() {
+        try {
+            const comments = document.querySelector('bili-comments')?.shadowRoot?.querySelectorAll('bili-comment-thread-renderer');
+            if (!comments || comments.length === 0) return false;
+
+            // 只检查前10条评论
+            const maxCommentsToCheck = Math.min(10, comments.length);
+            
+            for (let i = 0; i < maxCommentsToCheck; i++) {
+                const div = comments[i];
+                const userName = div?.shadowRoot?.querySelector('bili-comment-renderer')?.shadowRoot
+                    ?.querySelector('bili-comment-user-info')?.shadowRoot
+                    ?.querySelector('#user-name a')?.innerText;
+                
+                if (userName === config.myUsername) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (e) {
+            console.error('检查评论时出错:', e);
+            return false;
+        }
     }
 
     // 处理视频的完整流程
@@ -330,19 +330,30 @@
         const onlineNumber = getOnlineNumber();
 
         if (onlineNumber > config.minViewers) {
-            // 检查是否已经点赞
-            const alreadyLiked = isVideoLiked();
+            // 1. 所有视频都点赞
+            await likeVideo();
 
-            if (alreadyLiked) {
-                console.log('视频已经点赞过，直接切换到下一个视频');
+            // 2. 滚动到页面底部
+            scrollToBottom();
+            console.log(`等待${config.scrollDelay/1000}秒让页面加载...`);
+            await delay(config.scrollDelay); // 等待20秒
+
+            // 3. 切换到最新评论
+            await switchToNewestComments();
+
+            // 4. 检查是否已经评论过
+            if (hasCommented()) {
+                console.log('已经在最新评论前10条中评论过，立即切换到下一个视频');
                 await switchToNextVideo();
                 await processVideo(); // 继续处理下一个视频
-                return;
+                return; // 直接返回，不再执行后面的代码
             }
 
-            await performComment();
+            // 5. 随机选择评论并发表
+            const randomComment = comments[Math.floor(Math.random() * comments.length)];
+            await sendComment(randomComment);
 
-            console.log(`评论和点赞完成，等待${config.commentInterval}分钟后切换到下一个视频`);
+            console.log(`评论完成，等待${config.commentInterval}分钟后切换到下一个视频`);
 
             // 设置间隔时间后切换到下一个视频
             startCountdown(config.commentInterval);
@@ -414,56 +425,48 @@
     // 发送评论函数
     async function sendComment(comment) {
         try {
-    // 等待评论区加载
-    const isLoaded = await waitForCommentSection();
-    if (!isLoaded) {
-        alert('评论区加载超时');
-        return;
-    }
+            // 先等待评论区加载完成
+            const isLoaded = await waitForCommentSection();
+            if (!isLoaded) {
+                console.log('评论区加载超时，无法发表评论');
+                return;
+            }
 
-    // 获取评论输入框
-    const commentSection = document.querySelector('bili-comments');
-    if (!commentSection || !commentSection.shadowRoot) {
-        alert('评论区 Shadow DOM 未加载');
-        return;
-    }
+            // 获取评论输入框
+            const commentSection = document.querySelector('bili-comments');
+            const inputElement = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
+                .shadowRoot.querySelector('bili-comment-box')
+                .shadowRoot.querySelector('bili-comment-rich-textarea')
+                .shadowRoot.querySelector('#input .brt-root .brt-editor');
 
-    const inputElement = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
-        ?.shadowRoot?.querySelector('bili-comment-box')
-        ?.shadowRoot?.querySelector('bili-comment-rich-textarea')
-        ?.shadowRoot?.querySelector('#input .brt-root .brt-editor');
+            if (inputElement) {
+                // 设置评论内容
+                inputElement.innerHTML = comment;
 
-    if (!inputElement) {
-        alert('未找到评论输入框');
-        return;
-    }
+                // 触发输入事件
+                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                inputElement.dispatchEvent(inputEvent);
 
-    // 聚焦并输入内容
-    inputElement.click();
-    inputElement.innerText = comment;
+                await delay(500);
 
-    // 触发必要事件
-    const inputEvent = new Event('input', { bubbles: true });
-    inputElement.dispatchEvent(inputEvent);
+                // 获取发布按钮并点击
+                const publishButton = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
+                    .shadowRoot.querySelector('bili-comment-box')
+                    .shadowRoot.querySelector('#pub button');
 
-    await delay(500);
-
-    // 获取发布按钮
-    const publishButton = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
-        ?.shadowRoot?.querySelector('bili-comment-box')
-        ?.shadowRoot?.querySelector('#pub button');
-
-    if (publishButton && !publishButton.disabled) {
-        publishButton.click();
-        console.log('评论发表成功');
-        await delay(config.commentDelay);
-    } else {
-        alert('发布按钮不可用或未找到');
-    }
-} catch (e) {
-    alert(`评论时出错: ${e.message}`);  // ✅ 修复 alert 语法
-    console.error('详细错误:', e);      // 输出完整错误到控制台
-}
+                if (publishButton) {
+                    publishButton.click();
+                    console.log('评论发表成功');
+                    await delay(config.commentDelay);
+                } else {
+                    console.log('无法找到发布按钮');
+                }
+            } else {
+                console.log('无法找到评论输入框');
+            }
+        } catch (e) {
+            console.error('评论时出错:', e);
+        }
     }
 
     // 页面加载完成后添加按钮和在线人数显示
