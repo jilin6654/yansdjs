@@ -55,7 +55,7 @@
   "不想折腾？懒得配置？Grok3、Claude、DeepSeek、MJ绘图全集成，开箱即用，价格还打骨折！戳我躺赢[doge]",
   "写代码？DeepSeek！写文案？Claude！画图？MJ！聊天？Grok3！一个账号全搞定，价格还不到官方零头！[doge]",
   "官方1个模型的钱 = 我这儿8个模型！Grok3、Claude、DeepSeek、MJ绘图全包，省下的钱够买一台Switch！[doge]"
-]
+],
 
         INTERVALS: {
             PAGE_LOAD: 5000,      // 页面加载等待
