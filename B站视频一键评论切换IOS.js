@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         B站AI视频一键评论自动切换
+// @name         B站AI视频一键评论自动切换IOS
 // @namespace    http://tampermonkey.net/
-// @version      2.4
+// @version      1.0
 // @description  一键评论后自动点赞、等待并切换到下一个AI相关视频
 // @author       YourName
 // @match        https://www.bilibili.com/video/*
@@ -410,7 +410,7 @@
                 const inputElement = commentSection.shadowRoot?.querySelector('bili-comments-header-renderer')
                     ?.shadowRoot?.querySelector('bili-comment-box')
                     ?.shadowRoot?.querySelector('bili-comment-textarea')
-                    ?.shadowRoot?.querySelector('#input .brt-root .brt-editor');
+                    ?.shadowRoot?.querySelector('#input');
 
                 if (inputElement) {
                     return true;
@@ -437,7 +437,7 @@
             const inputElement = commentSection.shadowRoot.querySelector('bili-comments-header-renderer')
                 .shadowRoot.querySelector('bili-comment-box')
                 .shadowRoot.querySelector('bili-comment-textarea')
-                .shadowRoot.querySelector('#input .brt-root .brt-editor');
+                .shadowRoot.querySelector('#input');
 
             if (inputElement) {
                 // 设置评论内容
