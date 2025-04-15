@@ -440,13 +440,8 @@
                 .shadowRoot.querySelector('#input');
 
             if (inputElement) {
-                // 设置评论内容
-                inputElement.innerHTML = comment;
-
-                // 触发输入事件
-                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-                inputElement.dispatchEvent(inputEvent);
-
+               inputElement.focus();
+                document.execCommand('insertText', false, comment);
                 await delay(500);
 
                 // 获取发布按钮并点击
