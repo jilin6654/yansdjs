@@ -26,21 +26,28 @@
     };
 
     // 评论内容数组
-    const comments = [
-        "👈最近发现个超好用的ai工具，gemini、grok-3、claude、deepseek、mj绘图全都能用，超方便～",
-        "👈不用再到处切换ai工具了！这里gemini、grok-3、claude、deepseek还有mj绘图都能用，超省事～",
-        "👈分享个宝藏！可以同时用gemini、grok-3、claude、deepseek，还能玩mj绘图，真心推荐～",
-        "👈终于不用在多个ai工具间来回切换了！gemini、grok-3、claude、deepseek和mj绘图这里都有～",
-        "👈发现个超实用的ai工具，gemini、grok-3、claude、deepseek、mj绘图都能用，体验很棒～",
-        "👈最近在用的这个太方便了，gemini、grok-3、claude、deepseek、mj绘图全都有，爱了爱了～",
-        "👈找到个超棒的！gemini、grok-3、claude、deepseek和mj绘图都能用，省了不少事～",
-        "👈推荐这个！gemini、grok-3、claude、deepseek、mj绘图都能用，用着很顺手～",
-        "👈用了这个后真的回不去了，gemini、grok-3、claude、deepseek、mj绘图全都有，太方便了～",
-        "👈最近发现的这个真心不错，gemini、grok-3、claude、deepseek、mj绘图都能用，安利给大家～",
-        "👈分享一个我最近常用的，gemini、grok-3、claude、deepseek、mj绘图都在这里啦～",
-        "👈这个真的解决了我很多问题，gemini、grok-3、claude、deepseek、mj绘图都能用，超实用～",
-        "👈强烈推荐！gemini、grok-3、claude、deepseek、mj绘图全都有，用着特别顺手～"
-    ];
+    const comments =[
+    "推荐一个超方便的AI平台（yansd666.top），直接访问就能用，GPT、Gemini、Claude等最新模型全都有！",
+    "发现一个宝藏网站yansd666.top，无需额外工具，各种AI模型即点即用，GPT/Gemini/Claude全支持！",
+    "分享一个好用平台：yansd666.top，直接使用GPT-4、Gemini Pro等AI，切换超流畅~",
+    "yansd666.top这个平台太强了！无需复杂设置，就能体验GPT系列、Gemini、Claude等AI模型！",
+    "推荐yansd666.top！国内直接访问的AI聚合平台，包含所有主流大模型，工作效率翻倍！",
+    "免折腾的AI平台来了！yansd666.top 集成GPT/Gemini/Claude等模型，随时切换使用",
+    "亲测有效的AI平台：yansd666.top 直接使用各种大模型，绘图/写作/编程一站式解决",
+    "重磅推荐yansd666.top！无需特殊设置，GPT-4、Gemini 1.5、Claude 3等顶级AI全收录！",
+    "找到个宝藏：yansd666.top 直接访问的AI平台，所有最新大模型这里都能用！",
+    "工作效率神器yansd666.top！免复杂操作使用GPT/Gemini/Claude等AI，切换超方便",
+    "分享一个即开即用的AI聚合平台yansd666.top，GPT系列/Grok3/Deepseek全支持！",
+    "yansd666.top这个网站太方便了！直接体验各种最新AI模型，强烈推荐试试！",
+    "推荐即点即用的AI平台yansd666.top，GPT-4o/Gemini 1.5/Claude3等模型全开放",
+    "发现一个直接访问的AI神器yansd666.top，所有主流大模型这里都能直接使用！",
+    "免配置的AI聚合站yansd666.top，集成ChatGPT/Gemini/Deepseek等最新模型",
+    "yansd666.top这个平台真心好用！无需额外步骤，各种AI大模型想用哪个用哪个~",
+    "强烈安利yansd666.top！直接访问的AI平台，GPT/Gemini/Claude全系列支持",
+    "工作效率提升必备：yansd666.top 直接使用所有最新AI模型，切换超顺畅！",
+    "分享一个即开即用的AI网站yansd666.top，主流大模型这里都能直接体验",
+    "yansd666.top这个平台太省心了！无需复杂操作，GPT/Gemini/Claude等AI随点随用"
+  ];
 
     let countdownInterval = null;
     let countdownElement = null;
