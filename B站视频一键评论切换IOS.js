@@ -22,7 +22,7 @@
         commentDelay: 2000,     // 评论后的等待时间(毫秒)
         randomScrollInterval: 60000, // 随机滚动间隔时间(毫秒) - 1分钟
         randomScrollAmount: 200,  // 随机滚动幅度(像素)
-        myUsername: '烟神殿API中转' // 我的用户名
+        myUsername: ['烟神殿API中转','相濡以沫不负','烟神殿AI'] // 我的用户名
     };
 
     // 评论内容数组
@@ -321,7 +321,7 @@
                     ?.querySelector('bili-comment-user-info')?.shadowRoot
                     ?.querySelector('#user-name a')?.innerText;
                 
-                if (userName === config.myUsername) {
+                if (config.myUsername.includes(userName)) {
                     return true;
                 }
             }
